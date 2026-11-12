@@ -68,32 +68,55 @@ function Voting({ cfg, page, port, linkedId }: {
     [antwortenLive.records, linkedId],
   );
 
+  // One row per submission: same full name AND created_at within 10 s of the group's first answer.
   const people = useMemo(() => {
-    const map = new Map<string, { name: string; byTermin: Record<string, string> }>();
+    const groups: { id: string; name: string; start: number; byTermin: Record<string, string> }[] = [];
+    const openByName = new Map<string, number[]>();
     for (const r of antworten) {
       const name = `${fieldText(r, 'teilnehmer_vorname')} ${fieldText(r, 'teilnehmer_nachname')}`.trim();
       const key = name.toLowerCase();
       const tid = fieldRef(r, 'terminvorschlag');
       const a = fieldLookup(r, 'antwort')?.key;
       if (!tid || !a) continue;
-      const entry = map.get(key) ?? { name, byTermin: {} };
-      entry.byTermin[tid] = a;
-      map.set(key, entry);
+      const ts = r.createdAt ? Date.parse(r.createdAt) : NaN;
+      const idxs = openByName.get(key) ?? [];
+      let g = idxs
+        .map(i => groups[i])
+        .find(x => !Number.isNaN(ts) && !Number.isNaN(x.start) && Math.abs(ts - x.start) <= 10000 && !(tid in x.byTermin));
+      if (!g) {
+        g = { id: `${key}|${r.id}`, name, start: ts, byTermin: {} };
+        groups.push(g);
+        idxs.push(groups.length - 1);
+        openByName.set(key, idxs);
+      }
+      g.byTermin[tid] = a;
     }
-    return [...map.values()];
+    return groups;
   }, [antworten]);
 
+  // Every read answer counts exactly once.
   const counts = useMemo(() => {
     const out: Record<string, { ja: number; vielleicht: number }> = {};
-    for (const t of termine) {
-      out[t.id] = {
-        ja: people.filter(p => p.byTermin[t.id] === 'ja').length,
-        vielleicht: people.filter(p => p.byTermin[t.id] === 'vielleicht').length,
-      };
+    for (const t of termine) out[t.id] = { ja: 0, vielleicht: 0 };
+    for (const r of antworten) {
+      const tid = fieldRef(r, 'terminvorschlag');
+      const a = fieldLookup(r, 'antwort')?.key;
+      if (!tid || !out[tid]) continue;
+      if (a === 'ja') out[tid].ja += 1;
+      else if (a === 'vielleicht') out[tid].vielleicht += 1;
     }
     return out;
-  }, [termine, people]);
-  const maxJa = Math.max(0, ...Object.values(counts).map(c => c.ja));
+  }, [termine, antworten]);
+
+  // Exactly one "Beliebtester": most ja, then most vielleicht, then earliest beginn.
+  const bestId = useMemo(() => {
+    const ranked = [...termine].sort((a, b) =>
+      counts[b.id].ja - counts[a.id].ja
+      || counts[b.id].vielleicht - counts[a.id].vielleicht
+      || (fieldDate(a, 'beginn') ?? '').localeCompare(fieldDate(b, 'beginn') ?? ''));
+    const top = ranked[0];
+    return top && (counts[top.id].ja > 0 || counts[top.id].vielleicht > 0) ? top.id : null;
+  }, [termine, counts]);
 
   const closed = !!umfrage && fieldLookup(umfrage, 'status')?.key !== 'offen';
   const finalId = umfrage ? fieldRef(umfrage, 'finaler_termin') : null;
@@ -217,7 +240,7 @@ function Voting({ cfg, page, port, linkedId }: {
                 </th>
                 {termine.map(t => {
                   const l = dayLabel(t);
-                  const best = maxJa > 0 && counts[t.id].ja === maxJa;
+                  const best = t.id === bestId;
                   return (
                     <th
                       key={t.id}
@@ -237,7 +260,7 @@ function Voting({ cfg, page, port, linkedId }: {
             </thead>
             <tbody>
               {people.map(p => (
-                <tr key={p.name} className="border-t">
+                <tr key={p.id} className="border-t">
                   <td className="sticky left-0 z-10 bg-card p-2 max-w-[40vw] truncate">{p.name}</td>
                   {termine.map(t => (
                     <td key={t.id} className="p-2 text-center">
@@ -285,7 +308,7 @@ function Voting({ cfg, page, port, linkedId }: {
               <tr className="border-t">
                 <td className="sticky left-0 z-10 bg-card p-2 max-w-[40vw] text-xs text-muted-foreground">{tx('Summe')}</td>
                 {termine.map(t => (
-                  <td key={t.id} className={`p-2 text-center text-xs ${maxJa > 0 && counts[t.id].ja === maxJa ? 'bg-primary/10' : ''}`}>
+                  <td key={t.id} className={`p-2 text-center text-xs ${t.id === bestId ?'bg-primary/10' : ''}`}>
                     <div><b>{counts[t.id].ja}</b> {tx('Ja')}</div>
                     <div className="text-muted-foreground"><b>{counts[t.id].vielleicht}</b> {tx('Vielleicht')}</div>
                   </td>
