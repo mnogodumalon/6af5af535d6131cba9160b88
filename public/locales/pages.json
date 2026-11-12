@@ -1,0 +1,40 @@
+{
+  "pages": {
+    "en": {
+      "Alle Umfragen sind abgeschlossen.": "All polls are closed.",
+      "Alles abgeschlossen": "All closed",
+      "Alles entschieden": "All decided",
+      "Bei {0} gibt es schon einen Favoriten — du kannst den Termin festlegen.": "{0} already has a favorite — you can set the date.",
+      "Bereit zum Festlegen": "Ready to set",
+      "Besten Termin festlegen": "Set best date",
+      "Besten Termin festlegen & schließen": "Set best date & close",
+      "Erste Umfrage anlegen": "Create first poll",
+      "Es läuft {0} — noch wartet alles auf erste Antworten.": "{0} is running — still waiting for first responses.",
+      "Festlegen": "Set date",
+      "Finaler Termin": "Final date",
+      "Geschlossen": "Closed",
+      "Keine Umfragen in dieser Ansicht.": "No polls in this view.",
+      "Lege deine erste Terminumfrage an und teile den Link.": "Create your first scheduling poll and share the link.",
+      "Link kopieren": "Copy link",
+      "Link kopiert": "Link copied",
+      "Link noch teilen": "Share link still",
+      "Link zur Umfrage": "Poll link",
+      "Neue Umfrage": "New poll",
+      "Noch keine Terminvorschläge.": "No date proposals yet.",
+      "Noch keine Umfrage — leg Termine zur Auswahl fest und teile den Link.": "No polls yet — set dates to choose from and share the link.",
+      "Offen": "Open",
+      "Offene Umfragen": "Open polls",
+      "Ohne Antworten": "No responses",
+      "Ohne finalen Termin": "No final date",
+      "QR-Code öffnen": "Open QR code",
+      "Sobald jemand mit Ja abstimmt, erscheint hier der Favorit.": "As soon as someone votes Yes, the favorite will appear here.",
+      "Teilnahmeseite noch nicht veröffentlicht": "Participation page not yet published",
+      "Termin noch festlegen": "Date still to be set",
+      "{0} Ja": "{0} Yes",
+      "{0} Vielleicht": "{0} Maybe",
+      "{0} mit Abstimmung": "{0} with votes",
+      "Überall wird abgestimmt": "Voting everywhere"
+    }
+  },
+  "v": 1
+}
